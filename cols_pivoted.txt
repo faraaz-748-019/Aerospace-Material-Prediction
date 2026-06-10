@@ -1,0 +1,2 @@
+(4000, 27)
+R0_UTS, R1_UTS, R2_UTS, R0_YS, R1_YS, R2_YS, R0_K1c, R1_K1c, R2_K1c, R0_Elongation, R1_Elongation, R2_Elongation, R0_HAZ_Width, R1_HAZ_Width, R2_HAZ_Width, R0_Gauge_Depth, R1_Gauge_Depth, R2_Gauge_Depth, R0_Austenite_Content, R1_Austenite_Content, R2_Austenite_Content, Specimen_Type_S139, Specimen_Type_S200, Repair_Location_Center, Repair_Location_Edge, Repair_Location_Root, Repair_Location_Toe

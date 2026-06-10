@@ -1,0 +1,14 @@
+torch
+scikit-learn
+xgboost
+lightgbm
+shap
+pandas
+numpy
+matplotlib
+scipy
+joblib
+customtkinter
+reportlab
+openpyxl
+python-docx

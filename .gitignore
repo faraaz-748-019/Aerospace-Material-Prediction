@@ -1,0 +1,27 @@
+# Virtual Environment
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large ML/DL Model Files (RandomForest is 160MB, exceeding GitHub's 100MB limit)
+maraging_steel_predictor/models/ml/
+maraging_steel_predictor/models/dl/
+models/
+
+# Datasets (if you prefer to train on-the-fly and keep repo small, keep this section or comment it out)
+# maraging_steel_predictor/data/
+# *.csv
+# *.xlsx
+
+# Temporary Files / Logs
+*.log
+crash_log.txt
+crash_log2.txt
+xai_test_output.txt
+
+# System Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

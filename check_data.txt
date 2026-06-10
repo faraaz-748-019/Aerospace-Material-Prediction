@@ -1,0 +1,12 @@
+Total Samples: 4000
+Conditions: ['R0', 'R1', 'R2']
+Repair_Location unique values: ['Root', 'Toe', 'Edge', 'Center']
+
+Is Specimen_Type constant per Sample? True
+Is Repair_Location constant per Sample? True
+
+First Sample structure:
+   Sample_ID Specimen_Type Condition          UTS           YS        K1c  Elongation  HAZ_Width  Gauge_Depth Repair_Location  Austenite_Content
+0          0          S139        R0  1571.246957  1511.419667  72.922086    6.727071   1.455504     4.826599            Root           2.214239
+1          0          S139        R1  1500.000000  1472.781168  68.614391    8.433015   1.821937     4.926599            Root           3.932652
+2          0          S139        R2  1455.678161  1392.864565  66.576502    9.998795   2.335660     5.026599            Root           5.524272

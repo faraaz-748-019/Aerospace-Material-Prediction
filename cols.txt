@@ -1,0 +1,11 @@
+Sample_ID
+Specimen_Type
+Condition
+UTS
+YS
+K1c
+Elongation
+HAZ_Width
+Gauge_Depth
+Repair_Location
+Austenite_Content
