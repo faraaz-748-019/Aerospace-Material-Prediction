@@ -106,7 +106,3 @@ With the provided synthetic datasets, typical results:
 ├── scripts/                    # Utility scripts (e.g., test transforms, document generation)
 └── logs/                       # Application logs and text outputs
 ```
-
-## License
-
-Internal use — Vikram Sarabhai Space Centre (VSSC/ISRO)
