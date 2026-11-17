@@ -162,6 +162,9 @@ def compute_metrics(y_true, y_pred):
     mae_arr = mean_absolute_error(y_true, y_pred, multioutput='raw_values')
     rmse_arr = np.sqrt(mean_squared_error(y_true, y_pred, multioutput='raw_values'))
     r2_arr = r2_score(y_true, y_pred, multioutput='raw_values')
+    r2_arr = np.nan_to_num(r2_arr, nan=0.0)
+    if np.ndim(r2_arr) == 0:
+        r2_arr = np.full_like(mae_arr, float(r2_arr))
     
     # Accuracy as 1 - MAPE (capped at 0)
     mape_arr = np.mean(np.abs((y_true - y_pred) / (y_true + 1e-8)), axis=0) * 100
@@ -658,11 +661,12 @@ def run_full_training(data_dir=None, callback=None, progress_callback=None):
 def retrain_stacking_ensemble_predictions(ml_models, dl_models, X, y, scaler):
     """Helper to get stacking predictions for a new input."""
     preds = {}
+    n_out = len(TARGETS)
     for name, model in ml_models.items():
         try:
             p = model.predict(X)
             if p.ndim == 1: p = p.reshape(-1, 1)
-            preds[name] = p[:, :2]
+            preds[name] = p[:, :n_out]
         except:
             pass
     X_scaled = scaler.transform(X) if scaler else X
@@ -672,7 +676,7 @@ def retrain_stacking_ensemble_predictions(ml_models, dl_models, X, y, scaler):
             with torch.no_grad():
                 t = torch.FloatTensor(X_scaled).to(DEVICE)
                 p = model(t).cpu().numpy()
-            preds[name] = p[:, :2]
+            preds[name] = p[:, :n_out]
         except:
             pass
     return preds

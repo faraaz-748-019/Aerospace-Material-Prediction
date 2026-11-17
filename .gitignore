@@ -16,6 +16,8 @@ models/
 
 # Temporary Files / Logs
 *.log
+.coverage
+.pytest_cache/
 crash_log.txt
 crash_log2.txt
 xai_test_output.txt

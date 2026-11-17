@@ -1,0 +1,159 @@
+P0: 🔬 DOMAIN CONTEXT
+P1: This project is for Vikram Sarahai Space Centre (VSSC / ISRO). M250 Maraging Steel is used in aerospace launch vehicle thin-shell structures joined by TIG welding (LSLF — Longitudinal Seam Launch and Finish). Weld quality degrades through repair cycles:
+P2: R0 = Original weld (UTS ~1585–1650 MPa, YS ~1550–1596 MPa, KIC ~75 MPa√m)
+P3: R1 = First repair (UTS ~1510–1610 MPa, YS ~1475–1565 MPa)
+P4: R2 = Second repair (UTS ~1448 MPa, YS ~1366 MPa) — the prediction target
+P5: The objective: given R0 measurements (and optionally R1), predict R2 UTS, Yield Strength, and a complete smooth stress-strain curve for R2, with maximum possible accuracy. This lets engineers guarantee minimum R2 properties without destructive testing.
+P7: 📂 DATA FILES
+P8: Load all four CSV files. Auto-detect their presence. Combine and deduplicate across files.
+P9: File 1 & 3: synthetic_option_A_R0_to_R2_3000.csv and synthetic_option_A_R0_to_R2_3000__1_.csv Columns: sample_id, R0_UTS_S139_MPa, R0_UTS_S200_MPa, R0_YS_S139_MPa, R0_YS_S200_MPa, R0_KIC_MPa_sqrtm, R1_UTS_S139_MPa, R1_UTS_S200_MPa, R1_YS_S139_MPa, R1_YS_S200_MPa, Target_R2_UTS_MPa, Target_R2_YS_MPa
+P10: File 2: synthetic_option_A_revised_high_correlation_3000.csv Same columns (no sample_id). This is the primary high-correlation dataset — use it with extra weight in training.
+P11: File 4: synthetic_option_B_curve_based_R0_to_R2_3000.csv Columns: R0_elastic_slope_MPa, R0_yield_strain, R0_uts_strain, R0_fracture_strain, R0_yield_stress_MPa, R0_UTS_MPa, R0_hardening_ratio, R0_area_under_curve, Target_R2_yield_strain, Target_R2_uts_strain, Target_R2_fracture_strain, Target_R2_yield_stress_MPa, Target_R2_UTS_MPa, Target_R2_area_under_curve Use this to train the LSTM curve generator (predicts full curve shape parameters).
+P12: Pre-trained model: option_A_revised_best_model.pkl — load via joblib and evaluate as a baseline comparison only.
+P14: 🧠 FULL ML + DL PIPELINE
+P15: Model Architecture — train ALL of the following and ensemble them:
+P16: A. Classical ML Models (sklearn / xgboost / lightgbm):
+P17: Extra Trees Regressor
+P18: Random Forest Regressor
+P19: XGBoost with early stopping
+P20: LightGBM
+P21: Gradient Boosting Regressor
+P22: B. Deep Learning Models (PyTorch or TensorFlow/Keras — choose whichever installs cleanly):
+P23: 1D-CNN Regressor: 
+P24: Treat the 5 (or 9 with R1) input features as a 1D sequence
+P25: Architecture: Conv1D(64, kernel=3) → ReLU → Conv1D(128, kernel=3) → GlobalMaxPool → Dense(64) → Dense(2)
+P26: BatchNorm after each conv, Dropout(0.3) before final dense
+P27: Bidirectional LSTM Regressor: 
+P28: Reshape features as a sequence (each feature = one time step, value = feature value)
+P29: Architecture: BiLSTM(128) → BiLSTM(64) → Dense(32) → Dense(2)
+P30: Dropout(0.2) between LSTM layers
+P31: Use this for predicting R2 UTS and YS from R0/R1 scalars
+P32: Transformer Regressor (self-attention over features): 
+P33: Treat each input feature as a token with a learned embedding
+P34: Multi-head self-attention (4 heads) → LayerNorm → FFN(128) → Dense(2)
+P35: Positional encoding applied to feature tokens
+P36: This allows the model to learn which R0 properties most influence R2 degradation
+P37: CNN + LSTM Hybrid: 
+P38: Conv1D(64) → MaxPool → BiLSTM(64) → Dense(2)
+P39: Best of both: local pattern detection + sequential dependency
+P40: C. Meta-Learner Stacking Ensemble:
+P41: Train all models above on 80% data
+P42: Use their out-of-fold predictions as inputs to a Ridge regression meta-learner
+P43: Final predictions = meta-learner output
+P44: This typically achieves R² > 0.99 on this type of structured materials data
+P45: D. LSTM Stress-Strain Curve Generator (separate model):
+P46: Trained on Option B dataset (curve shape parameters)
+P47: Input: R0 curve parameters (elastic slope, yield strain, UTS strain, fracture strain, yield stress, UTS, hardening ratio, area)
+P48: Output: predicted R2 curve parameters (yield strain, UTS strain, fracture strain, yield stress, UTS, area)
+P49: Architecture: LSTM(64) → Dense(32) → Dense(6 outputs)
+P50: After predicting curve parameters, use scipy Pchip interpolation to reconstruct the full smooth stress-strain curve
+P51: Hardcode reference curve data points from known experimental values: 
+P52: Parent Material: from strain=0 to strain=0.016634, stress peaking ~1800 MPa
+P53: R0: strain to ~0.014234, stress to ~1585 MPa
+P54: R1: strain to ~0.015434, stress to ~1515 MPa
+P55: R2 reference: strain to ~0.016634, stress to ~1448 MPa
+P56: Use the exact tabular data visible in the project (R2 columns from image: strain values 0.002375→0.016634, stress 451.06→1448)
+P57: E. Uncertainty Estimation:
+P58: Implement Monte Carlo Dropout on the DL models: run inference 50 times with dropout ON, report mean ± 2σ as the confidence interval
+P59: Report "Minimum Guaranteed R2" = mean prediction − 2×standard deviation
+P60: F. SHAP Explainability:
+P61: After training, compute SHAP values for the best model
+P62: Show a feature importance bar chart in the GUI's XAI tab
+P64: ⚙️ TRAINING STRATEGY
+P65: 80/20 train-test split, stratified by binned UTS ranges
+P66: StandardScaler for all DL and MLP models
+P67: For DL models: use Adam optimizer, ReduceLROnPlateau scheduler, early stopping (patience=20)
+P68: Batch size: 32 for DL models
+P69: Epochs: up to 300 with early stopping
+P70: Hyperparameter tuning for top 3 classical models using RandomizedSearchCV (50 iterations, 5-fold CV)
+P71: Save every trained model as a .pkl or .pt file in the models/ directory
+P72: Report MAE, RMSE, R², and approximate accuracy % for every model on the test set
+P73: Auto-select the best model by R² score as the default for prediction
+P75: 🖥️ GUI — PROFESSIONAL DESKTOP APPLICATION
+P76: Use CustomTkinter for a modern look (fallback to Tkinter if unavailable). Use matplotlib embedded for all plots.
+P77: Tab 1: "Predict R2 Properties"
+P78: Labeled input fields for all R0 properties with units (MPa, MPa√m)
+P79: Toggle to reveal optional R1 input fields
+P80: Model selector dropdown: "Auto-Best", "CNN", "LSTM", "Transformer", "CNN+LSTM Hybrid", "Stacking Ensemble", "Extra Trees", "XGBoost"
+P81: Big colored "PREDICT" button
+P82: Results panel: 
+P83: Predicted R2 UTS (MPa) — large bold display
+P84: Predicted R2 Yield Strength (MPa) — large bold display
+P85: Confidence interval (± value from MC Dropout)
+P86: Minimum Guaranteed R2 value (mean − 2σ)
+P87: Degradation % from R0 to R2
+P88: Side-by-side comparison table: R0 → R1 → R2
+P89: Export as PDF report button
+P90: Tab 2: "Stress-Strain Curves"
+P91: Embedded matplotlib figure
+P92: Plots 5 curves: Parent Material (blue), R0 (orange), R1 (gray), R2 Reference (yellow), R2 Predicted (green dashed)
+P93: Markers on yield point, UTS, and fracture point for each curve
+P94: Confidence band (shaded region) around the predicted R2 curve using MC Dropout spread
+P95: X-axis: Strain in microstrain, Y-axis: Stress in MPa
+P96: Legend, grid, axis labels matching the project style
+P97: Matplotlib navigation toolbar, Export PNG/PDF button
+P98: Tab 3: "Model Training & Performance"
+P99: "Train All Models" button — runs full DL + ML pipeline in a background thread
+P100: Progress bar and live log output during training
+P101: Comparison table: all model names with MAE, RMSE, R², Accuracy%
+P102: Bar chart comparing R² scores across all models
+P103: Shows which model is currently selected as best
+P104: "Load Custom CSV" button to retrain with new data
+P105: Tab 4: "XAI — Explainability"
+P106: SHAP summary bar chart showing which R0 features most affect R2 predictions
+P107: Feature importance ranked list
+P108: Dropdown to select which model to explain
+P109: Tooltip explanations for each feature name
+P110: Tab 5: "Data Explorer"
+P111: File browser to load any CSV
+P112: Scrollable data table
+P113: Statistics panel (mean, std, min, max)
+P114: Scatter plots: R0 UTS vs R2 UTS, R0 YS vs R2 YS
+P115: Tab 6: "About / Help"
+P116: Project title: "M250 Maraging Steel Weld Repair Property Predictor"
+P117: Institution: Vikram Sarahai Space Centre (VSSC/ISRO)
+P118: R0/R1/R2 weld repair methodology explanation
+P119: Model architecture summary
+P120: Typical input value ranges
+P122: 🗂️ PROJECT STRUCTURE
+P123: maraging_steel_predictor/
+P124: ├── main.py                        # Entry point — launches GUI
+P125: ├── train_all.py                   # Full ML + DL training pipeline
+P126: ├── models/
+P127: │   ├── dl/                        # .pt files for CNN, LSTM, Transformer, Hybrid
+P128: │   └── ml/                        # .pkl files for classical models + meta-learner
+P129: ├── data/                          # Place all CSV files here
+P130: ├── core/
+P131: │   ├── architectures.py           # CNN, BiLSTM, Transformer, Hybrid PyTorch classes
+P132: │   ├── curve_lstm.py              # LSTM curve generator model
+P133: │   ├── ensemble.py                # Stacking ensemble logic
+P134: │   ├── uncertainty.py             # MC Dropout inference
+P135: │   ├── curve_generator.py         # Stress-strain curve reconstruction via Pchip
+P136: │   ├── shap_explainer.py          # SHAP computation and plotting
+P137: │   └── report_generator.py        # PDF export
+P138: ├── gui/
+P139: │   ├── app.py                     # Main GUI window and tabs
+P140: │   ├── tab_predict.py
+P141: │   ├── tab_curves.py
+P142: │   ├── tab_training.py
+P143: │   ├── tab_xai.py
+P144: │   └── tab_explorer.py
+P145: └── requirements.txt
+P147: ⚙️ TECHNICAL REQUIREMENTS
+P148: On first launch, if no trained models exist, auto-run training on CSVs in data/
+P149: All training runs in a background thread — GUI must remain fully responsive
+P150: If option_A_revised_best_model.pkl is present, load it immediately as the starting baseline
+P151: Handle missing R1 gracefully: use an R0-only trained variant of each model
+P152: Input validation: warn if values fall outside typical M250 ranges (UTS 1400–1800 MPa, YS 1300–1750 MPa, KIC 60–100 MPa√m)
+P153: MC Dropout uncertainty: 50 forward passes at inference time, report mean ± 2σ
+P154: SHAP: use TreeExplainer for classical models, GradientExplainer for DL models
+P155: All numeric outputs rounded to 2 decimal places
+P156: The LSTM curve generator must reconstruct a smooth curve using scipy Pchip interpolation between predicted key points, output as arrays of (strain, stress) pairs for matplotlib plotting
+P158: 📦 DEPENDENCIES
+P159: Auto-install all required packages. Key packages: pytorch (or tensorflow), scikit-learn, xgboost, lightgbm, shap, pandas, numpy, matplotlib, scipy, joblib, customtkinter, reportlab. Let the tool resolve all versions automatically.
+P161: ✅ DELIVERABLES
+P162: Complete working Python application with all files and folders
+P163: requirements.txt
+P164: README.md with: run instructions, input descriptions, model architecture summary, and expected accuracy
+P165: Launch with: python main.py
+P166: On first run, training completes automatically, best model is selected, and the GUI is prediction-ready

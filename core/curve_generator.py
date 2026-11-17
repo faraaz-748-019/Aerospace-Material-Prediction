@@ -94,16 +94,17 @@ def reconstruct_r2_curve(predicted_params, n_points=200):
         yield_stress = predicted_params[3]
         uts = predicted_params[4]
 
-    # Build key points for curve reconstruction
-    key_strains = [0.0, yield_strain * 0.3, yield_strain * 0.6, yield_strain,
-                   (yield_strain + uts_strain) / 2, uts_strain,
-                   (uts_strain + fracture_strain) / 2, fracture_strain]
-    
     # Elastic region is linear, then work hardening, then plateau/fracture
     # Enforce physically consistent 190 GPa Young's Modulus for M250
     elastic_slope = 190000.0 
     # CRITICAL: Always calculate yield_strain from yield_stress and slope to avoid slope jumps
     yield_strain = yield_stress / elastic_slope
+
+    # Build key points for curve reconstruction
+    key_strains = [0.0, yield_strain * 0.3, yield_strain * 0.6, yield_strain,
+                   (yield_strain + uts_strain) / 2, uts_strain,
+                   (uts_strain + fracture_strain) / 2, fracture_strain]
+    
     key_stresses = [
         0.0,
         elastic_slope * yield_strain * 0.3,

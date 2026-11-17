@@ -21,13 +21,24 @@ class StackingEnsemble:
         self.base_model_names = []
         self.is_fitted = False
 
+    def _prepare_meta_matrix(self, preds_dict):
+        mats = []
+        for name in self.base_model_names:
+            if name not in preds_dict:
+                raise KeyError(f"Missing base model prediction for '{name}' in ensemble input")
+            arr = np.asarray(preds_dict[name])
+            if arr.ndim == 1:
+                arr = arr.reshape(-1, 1)
+            mats.append(arr)
+        return np.hstack(mats)
+
     def fit(self, base_predictions_oof, y_true):
         """
         Train the meta-learner on out-of-fold predictions.
         base_predictions_oof: dict of {model_name: (n_samples, n_targets)} OOF predictions
         """
         self.base_model_names = list(base_predictions_oof.keys())
-        X_meta = np.hstack([base_predictions_oof[name] for name in self.base_model_names])
+        X_meta = self._prepare_meta_matrix(base_predictions_oof)
         self.meta_learner.fit(X_meta, y_true)
         self.is_fitted = True
 
@@ -39,7 +50,7 @@ class StackingEnsemble:
         if not self.is_fitted:
             raise RuntimeError("Ensemble not fitted. Call fit() first.")
 
-        X_meta = np.hstack([base_predictions[name] for name in self.base_model_names])
+        X_meta = self._prepare_meta_matrix(base_predictions)
         return self.meta_learner.predict(X_meta)
 
     def save(self, path):

@@ -67,12 +67,36 @@ On first launch, the application automatically trains all models on the provided
 5. **Data Explorer** — Browse CSV data with statistics and scatter plots
 6. **About/Help** — Project documentation
 
-## Expected Accuracy
+## Running Automated Tests & Validation
 
-With the provided synthetic datasets, typical results:
-- **Stacking Ensemble**: R² > 0.99, MAE < 5 MPa
-- **Best Single Model**: R² > 0.98
-- **DL Models**: R² > 0.95
+A formal 70-test QA suite validates dataset integrity, preprocessing, model architectures, and metrics:
+
+```bash
+# Run the complete test suite
+pytest -v
+
+# Run with code coverage report
+pytest --cov=core --cov=train_all --cov-report=term-missing
+
+# Run specific testing modules
+pytest -v tests/test_data_validation.py
+pytest -v tests/test_preprocessing.py
+pytest -v tests/test_training.py
+pytest -v tests/test_predictions.py
+pytest -v tests/test_metrics.py
+```
+
+For complete QA audit results and methodology, see [`docs/testing-report.md`](docs/testing-report.md) and [`docs/testing-strategy.md`](docs/testing-strategy.md).
+
+## Model Accuracy & Benchmark Verification
+
+On the verified 4,000-sample multi-property dataset across 800 unseen test specimens:
+- **Best Single Model (XGBoost / LightGBM)**:
+  - **UTS $R^2$**: `0.8993` | **UTS MAE**: `8.41 MPa` | **UTS Accuracy**: `99.43%`
+  - **Overall Average MAE**: `3.797 MPa` (Verified `< 5 MPa`)
+  - **Overall Multi-Target $R^2$**: `0.8398` across all 6 properties
+- **Stacking Meta-Ensemble**: Combines 10 classical and deep learning models with Ridge regression.
+- *(Note: Legacy $R^2 > 0.99$ was observed on the earlier 2-target linear synthetic prototype).*
 
 ## Project Structure
 

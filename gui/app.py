@@ -83,19 +83,33 @@ class MainApp:
         try:
             import torch
             from core.architectures import get_model
-            for name in ['cnn', 'lstm', 'transformer', 'hybrid']:
+            dl_map = {
+                'cnn': 'CNN',
+                'lstm': 'LSTM',
+                'transformer': 'Transformer',
+                'hybrid': 'CNN+LSTM Hybrid',
+                'pinn': 'Physics-Informed NN'
+            }
+            for name, display in dl_map.items():
                 path = os.path.join(dl_dir, f'{name}.pt')
                 if os.path.exists(path):
-                    data = torch.load(path, map_location='cpu', weights_only=False)
-                    model = get_model(name, data['n_features'])
-                    model.load_state_dict(data['model_state'])
-                    model.eval()
-                    display = {'cnn': 'CNN', 'lstm': 'LSTM',
-                               'transformer': 'Transformer',
-                               'hybrid': 'CNN+LSTM Hybrid'}[name]
-                    self.dl_models[display] = model
-        except Exception:
-            pass
+                    try:
+                        data = torch.load(path, map_location='cpu', weights_only=False)
+                        state = data['model_state']
+                        # Dynamically find output dimension from final layer weights
+                        n_out = 2
+                        for k in ['fc2.weight', 'linear2.weight', 'net.10.weight']:
+                            if k in state:
+                                n_out = state[k].shape[0]
+                                break
+                        model = get_model(name, data['n_features'], n_outputs=n_out)
+                        model.load_state_dict(state)
+                        model.eval()
+                        self.dl_models[display] = model
+                    except Exception as err:
+                        print(f"Error loading DL model {name}: {err}")
+        except Exception as e:
+            print(f"Error in DL loading setup: {e}")
 
         # Load ensemble
         ens_path = os.path.join(ml_dir, 'stacking_ensemble.pkl')

@@ -83,7 +83,7 @@ class TransformerRegressor(nn.Module):
     Feature embedding -> Positional Encoding -> MultiHeadAttention(4 heads) ->
     LayerNorm -> FFN(128) -> Dense(2)
     """
-    def __init__(self, n_features, d_model=64, n_heads=4, n_outputs=2):
+    def __init__(self, n_features, n_outputs=2, d_model=64, n_heads=4):
         super().__init__()
         self.feature_embedding = nn.Linear(1, d_model)
         self.pos_encoding = PositionalEncoding(d_model, max_len=n_features)

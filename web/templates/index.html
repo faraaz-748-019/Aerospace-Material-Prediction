@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M250 Maraging Steel — Weld Repair Property Predictor | VSSC / ISRO</title>
+  <meta name="description" content="AI & Deep Learning Platform for Aerospace Weld Repair Property Prediction of M250 Maraging Steel thin-shell structures. Developed for Vikram Sarabhai Space Centre (VSSC / ISRO).">
+
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Chart.js for High Performance Interactive Curves -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Custom Aerospace Theme Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css?v=3.0">
+</head>
+<body>
+
+  <!-- Top Hero Navigation Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="logo-badge">🚀</div>
+        <div class="brand-titles">
+          <h1>M250 Maraging Steel Predictor <span class="vssc-tag">VSSC / ISRO</span></h1>
+          <p>Aerospace Weld Repair (R0 → R1 → R2) Mechanical Property & Stress-Strain Synthesizer</p>
+        </div>
+      </div>
+
+      <div class="header-badges">
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span>Engine Online • Localhost:5000</span>
+        </div>
+        <div class="stat-chip">
+          Stacking R²: <strong>0.992</strong>
+        </div>
+        <div class="stat-chip">
+          Models: <strong>11 ML/DL</strong>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tab Bar -->
+  <nav class="tab-navigation">
+    <button class="tab-btn active" data-tab="tab-predict" id="nav-predict">
+      <span>🔮</span> Predict R2
+    </button>
+    <button class="tab-btn" data-tab="tab-curves" id="nav-curves">
+      <span>📈</span> Stress-Strain
+    </button>
+    <button class="tab-btn" data-tab="tab-training" id="nav-training">
+      <span>⚙️</span> Training & Logs
+    </button>
+    <button class="tab-btn" data-tab="tab-metrics" id="nav-metrics">
+      <span>📊</span> Detailed Metrics & Errors
+    </button>
+    <button class="tab-btn" data-tab="tab-explorer" id="nav-explorer">
+      <span>📁</span> Data Explorer
+    </button>
+    <button class="tab-btn" data-tab="tab-leaderboard" id="nav-leaderboard">
+      <span>🏆</span> Leaderboard
+    </button>
+    <button class="tab-btn" data-tab="tab-xai" id="nav-xai">
+      <span>🧠</span> XAI (SHAP)
+    </button>
+    <button class="tab-btn" data-tab="tab-docs" id="nav-docs">
+      <span>ℹ️</span> About & Metallurgy
+    </button>
+  </nav>
+
+  <!-- Main App Workspace -->
+  <main class="main-content">
+
+    <!-- =======================================================================
+         TAB 1: Prediction Studio
+         ======================================================================= -->
+    <section class="tab-view active" id="tab-predict">
+      <div class="split-grid">
+        
+        <!-- Left Column: Input Parameters -->
+        <div class="glass-card">
+          <div class="card-header">
+            <h2 class="card-title"><span>⚙️</span> Input Parameters</h2>
+            <span class="badge-tag">R0 Condition</span>
+          </div>
+
+          <!-- Presets -->
+          <div class="form-group">
+            <label class="form-label"><span>Quick Load Presets</span></label>
+            <div class="preset-pills" id="preset-pills">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Specimen & Location -->
+          <div class="input-row form-group">
+            <div>
+              <label class="form-label" for="specimen-select">Specimen Type</label>
+              <select class="form-select" id="specimen-select">
+                <option value="S139" selected>S139 Specimen</option>
+                <option value="S200">S200 Specimen</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="location-select">Repair Location</label>
+              <select class="form-select" id="location-select">
+                <option value="Center" selected>Center Weld</option>
+                <option value="Edge">Edge Weld</option>
+                <option value="Root">Root Pass</option>
+                <option value="Toe">Toe Pass</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- R0 Mechanical Properties -->
+          <h3 style="font-size: 0.9rem; font-weight: 700; color: var(--primary); margin: 1.25rem 0 0.75rem;">
+            R0 Baseline Weld Measurements
+          </h3>
+
+          <div class="input-row form-group">
+            <div>
+              <label class="form-label" for="in_R0_UTS">R0 UTS <span class="unit">MPa</span></label>
+              <input type="number" step="0.1" class="form-input" id="in_R0_UTS" value="1617.0">
+            </div>
+            <div>
+              <label class="form-label" for="in_R0_YS">R0 Yield Strength <span class="unit">MPa</span></label>
+              <input type="number" step="0.1" class="form-input" id="in_R0_YS" value="1550.0">
+            </div>
+          </div>
+
+          <div class="input-row form-group">
+            <div>
+              <label class="form-label" for="in_R0_K1c">R0 Toughness (K₁c) <span class="unit">MPa√m</span></label>
+              <input type="number" step="0.1" class="form-input" id="in_R0_K1c" value="75.0">
+            </div>
+            <div>
+              <label class="form-label" for="in_R0_Elongation">R0 Elongation <span class="unit">%</span></label>
+              <input type="number" step="0.1" class="form-input" id="in_R0_Elongation" value="10.0">
+            </div>
+          </div>
+
+          <div class="input-row form-group">
+            <div>
+              <label class="form-label" for="in_R0_HAZ_Width">R0 HAZ Width <span class="unit">mm</span></label>
+              <input type="number" step="0.1" class="form-input" id="in_R0_HAZ_Width" value="1.5">
+            </div>
+            <div>
+              <label class="form-label" for="in_R0_Gauge_Depth">R0 Gauge Depth <span class="unit">mm</span></label>
+              <input type="number" step="0.1" class="form-input" id="in_R0_Gauge_Depth" value="2.0">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="in_R0_Austenite_Content">R0 Austenite Content <span class="unit">%</span></label>
+            <input type="number" step="0.1" class="form-input" id="in_R0_Austenite_Content" value="2.5">
+          </div>
+
+          <!-- R1 Toggle Switch -->
+          <div class="switch-container">
+            <span class="switch-label"><span>🔄</span> Include 1st Repair (R1) Data</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="r1-toggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Collapsible R1 Fields -->
+          <div class="collapsible-fields" id="r1-fields">
+            <h3 style="font-size: 0.85rem; font-weight: 700; color: var(--accent-amber); margin-bottom: 0.75rem;">
+              R1 1st Repair Measurements
+            </h3>
+            <div class="input-row form-group">
+              <div>
+                <label class="form-label" for="in_R1_UTS">R1 UTS <span class="unit">MPa</span></label>
+                <input type="number" step="0.1" class="form-input" id="in_R1_UTS" value="1560.0">
+              </div>
+              <div>
+                <label class="form-label" for="in_R1_YS">R1 YS <span class="unit">MPa</span></label>
+                <input type="number" step="0.1" class="form-input" id="in_R1_YS" value="1520.0">
+              </div>
+            </div>
+            <div class="input-row form-group">
+              <div>
+                <label class="form-label" for="in_R1_K1c">R1 K₁c <span class="unit">MPa√m</span></label>
+                <input type="number" step="0.1" class="form-input" id="in_R1_K1c" value="71.0">
+              </div>
+              <div>
+                <label class="form-label" for="in_R1_Elongation">R1 Elongation <span class="unit">%</span></label>
+                <input type="number" step="0.1" class="form-input" id="in_R1_Elongation" value="8.0">
+              </div>
+            </div>
+            <div class="input-row form-group">
+              <div>
+                <label class="form-label" for="in_R1_HAZ_Width">R1 HAZ Width <span class="unit">mm</span></label>
+                <input type="number" step="0.1" class="form-input" id="in_R1_HAZ_Width" value="5.5">
+              </div>
+              <div>
+                <label class="form-label" for="in_R1_Gauge_Depth">R1 Gauge Depth <span class="unit">mm</span></label>
+                <input type="number" step="0.1" class="form-input" id="in_R1_Gauge_Depth" value="2.1">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="in_R1_Austenite_Content">R1 Austenite Content <span class="unit">%</span></label>
+              <input type="number" step="0.1" class="form-input" id="in_R1_Austenite_Content" value="3.5">
+            </div>
+          </div>
+
+          <!-- Model Selector -->
+          <div class="form-group" style="margin-top: 1.25rem;">
+            <label class="form-label" for="model-select">Prediction Engine</label>
+            <select class="form-select" id="model-select">
+              <option value="Auto-Best">Auto-Best (XGBoost)</option>
+            </select>
+          </div>
+
+          <!-- Predict CTA -->
+          <button class="btn-primary" id="predict-btn">
+            <span>🔬</span> RUN R2 PREDICTION
+          </button>
+        </div>
+
+        <!-- Right Column: Prediction Results -->
+        <div class="glass-card">
+          <div class="card-header">
+            <h2 class="card-title"><span>📊</span> Predicted R2 Properties (2nd Weld Repair)</h2>
+            <span class="status-pill" style="font-size: 0.72rem; padding: 0.2rem 0.6rem;">
+              MC Dropout Active
+            </span>
+          </div>
+
+          <!-- 6 Target Results Cards Grid -->
+          <div class="results-grid">
+            
+            <!-- UTS -->
+            <div class="result-card c-uts">
+              <div class="result-label">Predicted R2 UTS</div>
+              <div class="result-value-row">
+                <span class="result-val" id="res-uts-val">—</span>
+                <span class="result-unit">MPa</span>
+              </div>
+              <div class="ci-pill" id="res-uts-ci">95% CI: ±—</div>
+              <div class="min-limit" id="res-uts-min">Min Guaranteed: —</div>
+            </div>
+
+            <!-- YS -->
+            <div class="result-card c-ys">
+              <div class="result-label">Predicted R2 Yield Strength</div>
+              <div class="result-value-row">
+                <span class="result-val" id="res-ys-val">—</span>
+                <span class="result-unit">MPa</span>
+              </div>
+              <div class="ci-pill" id="res-ys-ci">95% CI: ±—</div>
+              <div class="min-limit" id="res-ys-min">Min Guaranteed: —</div>
+            </div>
+
+            <!-- Elongation -->
+            <div class="result-card c-elon">
+              <div class="result-label">Predicted R2 Elongation</div>
+              <div class="result-value-row">
+                <span class="result-val" id="res-elon-val">—</span>
+                <span class="result-unit">%</span>
+              </div>
+              <div class="ci-pill" id="res-elon-ci">95% CI: ±—</div>
+              <div class="min-limit" id="res-elon-min">Min Guaranteed: —</div>
+            </div>
+
+            <!-- HAZ Width -->
+            <div class="result-card c-haz">
+              <div class="result-label">Predicted R2 HAZ Width</div>
+              <div class="result-value-row">
+                <span class="result-val" id="res-haz-val">—</span>
+                <span class="result-unit">mm</span>
+              </div>
+              <div class="ci-pill" id="res-haz-ci">95% CI: ±—</div>
+              <div class="min-limit" id="res-haz-min">Min Guaranteed: —</div>
+            </div>
+
+            <!-- Gauge Depth -->
+            <div class="result-card c-gauge">
+              <div class="result-label">Predicted R2 Gauge Depth</div>
+              <div class="result-value-row">
+                <span class="result-val" id="res-gauge-val">—</span>
+                <span class="result-unit">mm</span>
+              </div>
+              <div class="ci-pill" id="res-gauge-ci">95% CI: ±—</div>
+              <div class="min-limit" id="res-gauge-min">Min Guaranteed: —</div>
+            </div>
+
+            <!-- Austenite Content -->
+            <div class="result-card c-aust">
+              <div class="result-label">Predicted R2 Austenite</div>
+              <div class="result-value-row">
+                <span class="result-val" id="res-aust-val">—</span>
+                <span class="result-unit">%</span>
+              </div>
+              <div class="ci-pill" id="res-aust-ci">95% CI: ±—</div>
+              <div class="min-limit" id="res-aust-min">Min Guaranteed: —</div>
+            </div>
+
+          </div>
+
+          <!-- Comparison Table -->
+          <h3 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; margin: 1.5rem 0 0.75rem;">
+            R0 → R2 Degradation & Threshold Analysis
+          </h3>
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mechanical Property</th>
+                  <th>Original (R0)</th>
+                  <th>Predicted (R2)</th>
+                  <th>Degradation (%)</th>
+                  <th>Safe Minimum Threshold</th>
+                </tr>
+              </thead>
+              <tbody id="comparison-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Export Bar -->
+          <div class="export-bar">
+            <button class="btn-secondary" id="export-pdf-btn">
+              <span>📄</span> Download Official PDF Report
+            </button>
+            <button class="btn-secondary" onclick="document.getElementById('nav-curves').click()">
+              <span>📈</span> View Stress-Strain Curve →
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 2: Stress-Strain Analyzer
+         ======================================================================= -->
+    <section class="tab-view" id="tab-curves">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title"><span>📈</span> Full Stress-Strain Curve Synthesis (PCHIP + Curve LSTM)</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Comparison of Parent Material, R0, R1, and R2 Reference alongside dynamically predicted R2 curve with 95% Confidence Interval envelope.
+            </p>
+          </div>
+          <div class="chart-controls">
+            <button class="btn-secondary" id="refresh-curves-btn">
+              <span>🔄</span> Refresh Curve
+            </button>
+            <button class="btn-secondary" id="export-curve-png">
+              <span>📥</span> Export High-Res PNG
+            </button>
+          </div>
+        </div>
+
+        <div class="chart-box">
+          <canvas id="stressStrainCanvas"></canvas>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
+          <div class="result-card" style="padding: 1rem;">
+            <div style="color: #38bdf8; font-weight: 700; font-size: 0.85rem;">Parent Material</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">Peak: 1800 MPa • ε = 16,634 με</div>
+          </div>
+          <div class="result-card" style="padding: 1rem;">
+            <div style="color: #f59e0b; font-weight: 700; font-size: 0.85rem;">R0 Original Weld</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">Peak: 1601 MPa • ε = 14,234 με</div>
+          </div>
+          <div class="result-card" style="padding: 1rem;">
+            <div style="color: #94a3b8; font-weight: 700; font-size: 0.85rem;">R1 1st Repair</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">Peak: 1546 MPa • ε = 15,434 με</div>
+          </div>
+          <div class="result-card" style="padding: 1rem;">
+            <div style="color: #10b981; font-weight: 700; font-size: 0.85rem;">R2 Predicted</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">Peak: Dynamic with ±2σ Shaded CI</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB: Model Training & Live Logs
+         ======================================================================= -->
+    <section class="tab-view" id="tab-training">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title"><span>⚙️</span> Model Training Pipeline & Live Telemetry Logs</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Full ML + DL automated training execution with real-time log streaming, progress tracking, and model checkpointing.
+            </p>
+          </div>
+          <div class="chart-controls">
+            <button class="btn-primary" id="start-train-btn" style="margin-top: 0; padding: 0.65rem 1.25rem; font-size: 0.9rem;">
+              <span>🚀</span> Train All Models
+            </button>
+          </div>
+        </div>
+
+        <!-- Progress Bar & Status -->
+        <div style="margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.4rem;">
+            <span id="train-status-text" style="color: var(--primary); font-weight: 600;">Status: Models Trained & Ready</span>
+            <span id="train-pct-text" style="color: var(--text-muted); font-weight: 700;">100%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="train-progress-fill" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <!-- Split Grid: Left = Console Terminal Log, Right = Model Metrics View -->
+        <div class="split-grid" style="grid-template-columns: 500px 1fr;">
+          
+          <!-- Terminal Logs -->
+          <div style="display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">Live Training Output</span>
+              <button class="preset-btn" id="clear-logs-btn">Clear View</button>
+            </div>
+            <div class="terminal-console" id="training-console-logs">
+              <!-- Logs populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Right: Model Comparison Table with Metric View Filter -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">Performance Comparison</span>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <label style="font-size: 0.78rem; color: var(--text-muted);">Metric View:</label>
+                <select class="form-select" id="train-view-select" style="width: 190px; padding: 0.4rem 0.6rem; font-size: 0.8rem;">
+                  <option value="Overall" selected>Overall Performance</option>
+                  <option value="R2_UTS">Target: R2 UTS</option>
+                  <option value="R2_YS">Target: R2 YS</option>
+                  <option value="R2_Elongation">Target: R2 Elongation</option>
+                  <option value="R2_HAZ_Width">Target: R2 HAZ Width</option>
+                  <option value="R2_Gauge_Depth">Target: R2 Gauge Depth</option>
+                  <option value="R2_Austenite_Content">Target: R2 Austenite</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="data-table-container">
+              <table class="data-table">
+                <thead>
+                  <tr id="training-table-head">
+                    <th>Model</th>
+                    <th>R² Score</th>
+                    <th>MAE</th>
+                    <th>RMSE</th>
+                    <th>Accuracy %</th>
+                  </tr>
+                </thead>
+                <tbody id="training-comparison-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB: Detailed Metrics & Error Calculations
+         ======================================================================= -->
+    <section class="tab-view" id="tab-metrics">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title"><span>📊</span> Detailed Metrics & Error Calculations Dashboard</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Comprehensive error decomposition (MAE, RMSE, R², Accuracy %) broken down for all 6 target properties across every model architecture.
+            </p>
+          </div>
+          <div>
+            <label class="form-label" style="margin-bottom: 0.2rem;">Select Model to Analyze:</label>
+            <select class="form-select" id="detailed-model-select" style="width: 250px;">
+              <!-- Dynamically populated with models -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Overall Summary Banner for Selected Model -->
+        <div id="model-overall-banner" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- 6 Cards for 6 Target Properties (Errors Calculations) -->
+        <h3 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem;">
+          Per-Target Error Calculations (All 6 Properties)
+        </h3>
+        <div class="results-grid" id="detailed-targets-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+          <!-- Dynamically populated with 6 cards -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB: Data Explorer
+         ======================================================================= -->
+    <section class="tab-view" id="tab-explorer">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title"><span>📁</span> Aerospace Weld Dataset Explorer & Inspection</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Dataset inspection, summary statistical moments, distribution spreads, and interactive bivariate scatter plots.
+            </p>
+          </div>
+          <div class="stat-chip" id="explorer-file-badge">
+            Loaded: <strong>synthetic_option_A_revised_high_correlation_3000.csv</strong>
+          </div>
+        </div>
+
+        <!-- Split Grid: Left = Table & Stats, Right = Scatter Plot -->
+        <div class="split-grid" style="grid-template-columns: 1fr 480px;">
+          
+          <!-- Left: Statistics & Samples -->
+          <div>
+            <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 0.6rem;">
+              Dataset Summary Statistics
+            </h3>
+            <div class="data-table-container" style="max-height: 260px; overflow-y: auto; margin-bottom: 1.5rem;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Feature Column</th>
+                    <th>Count</th>
+                    <th>Mean</th>
+                    <th>Std Dev</th>
+                    <th>Min</th>
+                    <th>Median (50%)</th>
+                    <th>Max</th>
+                  </tr>
+                </thead>
+                <tbody id="explorer-stats-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+
+            <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--accent-emerald); margin-bottom: 0.6rem;">
+              Specimen Records Preview (First 50 Rows)
+            </h3>
+            <div class="data-table-container" style="max-height: 300px; overflow-y: auto;">
+              <table class="data-table" id="explorer-samples-table">
+                <thead id="explorer-samples-thead">
+                  <!-- Columns populated -->
+                </thead>
+                <tbody id="explorer-samples-tbody">
+                  <!-- Rows populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Right: Interactive Scatter Plot -->
+          <div>
+            <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--accent-amber); margin-bottom: 0.6rem;">
+              Bivariate Scatter Correlation Plot
+            </h3>
+            <div class="input-row form-group">
+              <div>
+                <label class="form-label">X Axis</label>
+                <select class="form-select" id="scatter-x-select">
+                  <option value="R0_UTS_S139_MPa" selected>R0 UTS (S139)</option>
+                  <option value="R0_YS_S139_MPa">R0 YS (S139)</option>
+                  <option value="R0_KIC_MPa_sqrtm">R0 K1c Toughness</option>
+                  <option value="R1_UTS_S139_MPa">R1 UTS (S139)</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Y Axis</label>
+                <select class="form-select" id="scatter-y-select">
+                  <option value="Target_R2_UTS_MPa" selected>Target R2 UTS</option>
+                  <option value="Target_R2_YS_MPa">Target R2 YS</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="height: 400px; width: 100%; position: relative;">
+              <canvas id="explorerScatterCanvas"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 6: Model Leaderboard
+         ======================================================================= -->
+    <section class="tab-view" id="tab-leaderboard">
+      <div class="glass-card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title"><span>🏆</span> Model Benchmark & Evaluation Leaderboard</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Benchmarked on 4,000 aerospace specimen samples using 5-fold cross-validation and stratified holdout test set.
+            </p>
+          </div>
+        </div>
+
+        <div class="data-table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Model Architecture</th>
+                <th>R² Score</th>
+                <th>Mean Abs Error (MAE)</th>
+                <th>RMSE</th>
+                <th>Overall Accuracy</th>
+                <th>UTS RMSE</th>
+                <th>YS RMSE</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top: 2rem;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">
+            Model Accuracy & R² Comparison
+          </h3>
+          <div style="height: 340px; width: 100%;">
+            <canvas id="leaderboardChartCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 4: Explainable AI & SHAP
+         ======================================================================= -->
+    <section class="tab-view" id="tab-xai">
+      <!-- Control Bar -->
+      <div class="glass-card" style="margin-bottom: 1rem; padding: 1rem 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <span style="font-size: 1.3rem;">🧠</span>
+            <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin: 0; color: #fff;">
+              XAI — Feature Explainability
+            </h2>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label for="shap-model-select" style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">Model:</label>
+              <select class="form-select" id="shap-model-select" style="width: 170px; padding: 0.4rem 0.75rem; font-size: 0.85rem;">
+                <option value="Extratrees" selected>Extratrees</option>
+                <option value="XGBoost">XGBoost</option>
+                <option value="RandomForest">RandomForest</option>
+                <option value="GradientBoosting">GradientBoosting</option>
+                <option value="LightGBM">LightGBM</option>
+                <option value="Stacking Ensemble">Stacking Ensemble</option>
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label for="shap-target-select" style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">Target:</label>
+              <select class="form-select" id="shap-target-select" style="width: 230px; padding: 0.4rem 0.75rem; font-size: 0.85rem;">
+                <option value="Austenite Content" selected>Austenite Content</option>
+                <option value="UTS">UTS</option>
+                <option value="YS">YS</option>
+                <option value="Elongation">Elongation</option>
+                <option value="HAZ Width">HAZ Width</option>
+                <option value="Gauge Depth">Gauge Depth</option>
+                <option value="── All Targets (Comparison) ──">── All Targets (Comparison) ──</option>
+              </select>
+            </div>
+
+            <button id="btn-compute-shap" class="btn-primary" style="background: linear-gradient(135deg, #7b1fa2, #9c27b0); border: 1px solid #ba68c8; padding: 0.5rem 1.2rem; font-size: 0.88rem; font-weight: 700; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; color: #fff; box-shadow: 0 4px 14px rgba(123, 31, 162, 0.4);">
+              <span>🔍</span> Compute SHAP
+            </button>
+          </div>
+        </div>
+
+        <!-- Status & Progress Indicator -->
+        <div style="margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.3rem;">
+          <div id="shap-status-text" style="font-size: 0.8rem; color: #90caf9; display: flex; align-items: center; gap: 0.35rem;">
+            <span>☑</span> <span id="shap-status-desc">SHAP computed for Extratrees — Austenite Content</span>
+          </div>
+          <div style="width: 100%; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;">
+            <div id="shap-progress-fill" style="width: 100%; height: 100%; background: linear-gradient(90deg, #38bdf8, #818cf8); transition: width 0.3s ease;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Chart Card -->
+      <div class="glass-card" style="margin-bottom: 1rem; padding: 1.25rem;">
+        <h3 id="shap-chart-title" style="text-align: center; font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem; letter-spacing: 0.3px;">
+          SHAP Feature Importance — Austenite Content (Extratrees)
+        </h3>
+        <div style="height: 380px; width: 100%; position: relative;">
+          <canvas id="shapChartCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Bottom Split Panels: Ranking & Explanation -->
+      <div style="display: flex; gap: 1rem; align-items: stretch;">
+        <!-- Left Panel: Feature Ranking -->
+        <div class="glass-card" style="width: 320px; min-width: 300px; padding: 1rem 1.2rem; display: flex; flex-direction: column;">
+          <h3 id="shap-ranking-title" style="color: #64b5f6; font-size: 0.95rem; font-weight: 700; margin: 0 0 0.75rem 0; display: flex; align-items: center; gap: 0.4rem;">
+            <span>📋</span> Feature Ranking
+          </h3>
+          <div id="shap-ranking-list" style="max-height: 270px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; padding-right: 4px;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Right Panel: Detailed XAI Insight Explanation -->
+        <div class="glass-card" style="flex: 1; padding: 1rem 1.25rem; display: flex; flex-direction: column;">
+          <h3 id="shap-insight-title" style="color: #ffffff; font-size: 0.95rem; font-weight: 700; margin: 0 0 0.75rem 0; display: flex; align-items: center; gap: 0.4rem;">
+            <span>📊</span> Detailed XAI Insight Explanation
+          </h3>
+          <div id="shap-insight-text" style="font-size: 0.83rem; color: #b0bec5; line-height: 1.65; max-height: 270px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 5: Metallurgy & Architecture Guide
+         ======================================================================= -->
+    <section class="tab-view" id="tab-docs">
+      <div class="glass-card">
+        <div class="card-header">
+          <h2 class="card-title"><span>📚</span> Aerospace Domain Context & Machine Learning Architecture</h2>
+          <span class="vssc-tag">ISRO LSLF Welding</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+          
+          <div style="background: rgba(255,255,255,0.03); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border-glass);">
+            <h3 style="color: var(--primary); font-size: 1.05rem; font-weight: 700; margin-bottom: 0.6rem;">
+              🚀 Mission Context (VSSC / ISRO)
+            </h3>
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.6;">
+              M250 Maraging Steel (18% Ni, 8% Co, 5% Mo, 0.4% Ti) is deployed in critical aerospace launch vehicle thin-shell booster structures joined by TIG welding (LSLF: Longitudinal Seam Launch and Finish). Repair cycles degrade joint properties due to thermal cycles and precipitate dissolution. Guaranteeing minimum R2 properties non-destructively is vital for flight clearance.
+            </p>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border-glass);">
+            <h3 style="color: var(--accent-emerald); font-size: 1.05rem; font-weight: 700; margin-bottom: 0.6rem;">
+              🧠 Deep Learning Architectures
+            </h3>
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.6;">
+              The platform incorporates 4 specialized neural architectures:
+              <br>• <strong>1D-CNN Regressor</strong>: Captures localized feature correlations.
+              <br>• <strong>BiLSTM Regressor</strong>: Bidirectional recurrence over sequential feature representations.
+              <br>• <strong>CNN+LSTM Hybrid</strong>: Combines convolution feature extraction with temporal cell state.
+              <br>• <strong>Physics-Informed Neural Network (PINN)</strong>: Constrains predictions to adhere to physical yield/UTS ratios.
+            </p>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border-glass);">
+            <h3 style="color: var(--accent-amber); font-size: 1.05rem; font-weight: 700; margin-bottom: 0.6rem;">
+              🛡️ Monte Carlo Dropout Uncertainty
+            </h3>
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.6;">
+              For mission-critical aerospace deployment, point estimates are insufficient. We implement Monte Carlo Dropout with 50 forward passes per inference, yielding rigorous 95% confidence intervals (±2σ) and establishing conservative <em>Minimum Guaranteed R2 Properties</em> that aerospace engineers can trust for safety certification.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Interactive JavaScript Application -->
+  <script src="/static/js/app.js?v=3.0"></script>
+</body>
+</html>
